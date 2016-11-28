@@ -5,8 +5,14 @@ import com.unikre.yandextranslate.params.Format;
 import com.unikre.yandextranslate.params.Language;
 import com.unikre.yandextranslate.params.RequestType;
 import lombok.Builder;
+import lombok.Singular;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.message.BasicNameValuePair;
 
-import java.net.URLEncoder;
+import java.util.ArrayList;
+import java.util.List;
 
 @Builder
 public class RequestParams {
@@ -24,7 +30,8 @@ public class RequestParams {
     private ApiVersion apiVersion; // Optional
     private String encoding; // Optional
     private String apiKey;
-    private String text;
+    @Singular
+    private List<String> texts;
     private Language from; // Optional
     private Language to;
     private Format format; // Optional
@@ -36,17 +43,13 @@ public class RequestParams {
         private String encoding = DEFAULT_ENCODING;
     }
 
-    public String buildUrl() throws Exception {
+    public HttpPost buildHttpPost() throws Exception {
+        HttpPost httpPost = new HttpPost(buildUrl());
 
-        // Validate mandatory params
-        if (apiKey == null || text == null || to == null) {
-            throw new IllegalArgumentException("Missing mandatory params");
-        }
-
-        String url = apiVersion.getUrl() + "/" + requestType + "/translate?";
+        List<NameValuePair> params = new ArrayList<NameValuePair>();
 
         // API key
-        url += PARAM_KEY + "=" + URLEncoder.encode(apiKey, this.encoding);
+        params.add(new BasicNameValuePair(PARAM_KEY, apiKey));
 
         // Lang
         String langPair = "";
@@ -54,16 +57,30 @@ public class RequestParams {
             langPair = from + "-";
         }
         langPair += to;
-        url += "&" + PARAM_LANG + "=" + URLEncoder.encode(langPair, this.encoding);
+        params.add(new BasicNameValuePair(PARAM_LANG, langPair));
 
         // Text
-        url += "&" + PARAM_TEXT + "=" + URLEncoder.encode(text, this.encoding);
-
-        if (format != null) {
-            url += "&" + PARAM_FORMAT + "=" + URLEncoder.encode(format.toString(), this.encoding);
+        for (String text : texts) {
+            params.add(new BasicNameValuePair(PARAM_TEXT, text));
         }
 
-        return url;
+        // Format
+        if (format != null) {
+            params.add(new BasicNameValuePair(PARAM_FORMAT, format.toString()));
+        }
+
+        httpPost.setEntity(new UrlEncodedFormEntity(params));
+
+        return httpPost;
+    }
+
+    private String buildUrl() throws Exception {
+        // Validate mandatory params
+        if (apiKey == null || texts.size() == 0 || to == null) {
+            throw new IllegalArgumentException("Missing mandatory params");
+        }
+
+        return apiVersion.getUrl() + "/" + requestType + "/translate?";
     }
 
 }

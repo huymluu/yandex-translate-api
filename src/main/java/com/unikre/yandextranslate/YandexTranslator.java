@@ -15,6 +15,9 @@ import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Setter
 @Getter
 public class YandexTranslator {
@@ -30,15 +33,24 @@ public class YandexTranslator {
     }
 
     public String translate(String text, Language from, Language to) throws Exception {
+
+        List<String> input = new ArrayList<>();
+        input.add(text);
+        List<String> result = translate(input, from, to);
+
+        return result.get(0);
+    }
+
+    public List<String> translate(List<String> texts, Language from, Language to) throws Exception {
         RequestParams requestParams = RequestParams.builder()
                 .apiVersion(apiVersion)
                 .apiKey(apiKey)
-                .text(text)
+                .texts(texts)
                 .from(from)
                 .to(to)
                 .build();
 
-        HttpPost httpPost = new HttpPost(requestParams.buildUrl());
+        HttpPost httpPost = requestParams.buildHttpPost();
         CloseableHttpResponse response = httpClient.execute(httpPost);
 
         // Response - status code
@@ -58,7 +70,12 @@ public class YandexTranslator {
         JSONObject jsonObject = new JSONObject(EntityUtils.toString(response.getEntity()));
         JSONArray textArray = jsonObject.getJSONArray("text");
 
-        return textArray.getString(0);
+        List<String> list = new ArrayList<String>();
+        for (int i = 0; i < textArray.length(); i++) {
+            list.add(textArray.getString(i));
+        }
+
+        return list;
     }
 
 }
