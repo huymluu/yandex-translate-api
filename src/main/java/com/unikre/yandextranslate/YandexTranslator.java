@@ -78,4 +78,12 @@ public class YandexTranslator {
         return list;
     }
 
+    public String translate(String text, Language to) throws Exception {
+        return translate(text, Language.AUTODETECT, to);
+    }
+
+    public List<String> translate(List<String> texts, Language to) throws Exception {
+        return translate(texts, Language.AUTODETECT, to);
+    }
+
 }

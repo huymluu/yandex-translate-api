@@ -31,4 +31,23 @@ public class TranslatorTest {
         Assert.assertEquals(output.get(0), "Hallo");
         Assert.assertEquals(output.get(1), "Welt");
     }
+
+    @Test
+    public void testAutoDetectFrom() throws Exception {
+        YandexTranslator yandexTranslator = new YandexTranslator(SAMPLE_KEY);
+
+        // Single
+        String singleOutput = yandexTranslator.translate("Hallo Welt", Language.ENGLISH);
+        Assert.assertEquals(singleOutput, "Hello World");
+
+        // Multi
+        List<String> input = new ArrayList<String>();
+        input.add("Hello");
+        input.add("World");
+
+        List<String> output = yandexTranslator.translate(input, Language.GERMAN);
+        Assert.assertEquals(output.size(), 2);
+        Assert.assertEquals(output.get(0), "Hallo");
+        Assert.assertEquals(output.get(1), "Welt");
+    }
 }
