@@ -50,4 +50,15 @@ public class TranslatorTest {
         Assert.assertEquals(output.get(0), "Hallo");
         Assert.assertEquals(output.get(1), "Welt");
     }
+
+    @Test
+    public void testGetLangs() throws Exception {
+        YandexTranslator yandexTranslator = new YandexTranslator(SAMPLE_KEY);
+
+        List<Language> languages = yandexTranslator.getSupportedLanguages(Language.GERMAN);
+        Assert.assertTrue(languages.size() > 0);
+
+        languages = yandexTranslator.getSupportedLanguages();
+        Assert.assertTrue(languages.size() > 0);
+    }
 }

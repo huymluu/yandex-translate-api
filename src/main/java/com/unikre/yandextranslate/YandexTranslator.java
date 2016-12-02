@@ -1,7 +1,8 @@
 package com.unikre.yandextranslate;
 
-import com.unikre.yandextranslate.http.RequestParams;
+import com.unikre.yandextranslate.http.GetLangsRequestParams;
 import com.unikre.yandextranslate.http.ResponseCode;
+import com.unikre.yandextranslate.http.TranslateRequestParams;
 import com.unikre.yandextranslate.params.ApiVersion;
 import com.unikre.yandextranslate.params.Language;
 import lombok.Getter;
@@ -18,11 +19,13 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.List;
 
-@Setter
-@Getter
 public class YandexTranslator {
 
+    @Getter
+    @Setter
     private String apiKey;
+    @Getter
+    @Setter
     private ApiVersion apiVersion;
     private CloseableHttpClient httpClient;
 
@@ -32,27 +35,7 @@ public class YandexTranslator {
         httpClient = HttpClients.createDefault();
     }
 
-    public String translate(String text, Language from, Language to) throws Exception {
-
-        List<String> input = new ArrayList<>();
-        input.add(text);
-        List<String> result = translate(input, from, to);
-
-        return result.get(0);
-    }
-
-    public List<String> translate(List<String> texts, Language from, Language to) throws Exception {
-        RequestParams requestParams = RequestParams.builder()
-                .apiVersion(apiVersion)
-                .apiKey(apiKey)
-                .texts(texts)
-                .from(from)
-                .to(to)
-                .build();
-
-        HttpPost httpPost = requestParams.buildHttpPost();
-        CloseableHttpResponse response = httpClient.execute(httpPost);
-
+    private void validateResponse(CloseableHttpResponse response) throws Exception {
         // Response - status code
         ResponseCode responseCode = ResponseCode.byCode(response.getStatusLine().getStatusCode());
         if (responseCode == null) {
@@ -66,6 +49,56 @@ public class YandexTranslator {
         if (httpEntity == null) {
             throw new Exception("API call error: Empty response body");
         }
+    }
+
+    public List<Language> getSupportedLanguages() throws Exception {
+        return getSupportedLanguages(Language.ENGLISH);
+    }
+
+    public List<Language> getSupportedLanguages(Language ui) throws Exception {
+        GetLangsRequestParams requestParams = GetLangsRequestParams.builder()
+                .apiVersion(apiVersion)
+                .apiKey(apiKey)
+                .ui(ui)
+                .build();
+
+        HttpPost httpPost = requestParams.buildHttpPost();
+        CloseableHttpResponse response = httpClient.execute(httpPost);
+
+        validateResponse(response);
+
+        JSONObject jsonObject = new JSONObject(EntityUtils.toString(response.getEntity()));
+        JSONObject jsonLangsObject = jsonObject.getJSONObject("langs");
+
+        List<Language> ret = new ArrayList<>();
+        for (String code : jsonLangsObject.keySet()) {
+            ret.add(Language.byCode(code));
+        }
+        return ret;
+    }
+
+    public String translate(String text, Language from, Language to) throws Exception {
+
+        List<String> input = new ArrayList<>();
+        input.add(text);
+        List<String> result = translate(input, from, to);
+
+        return result.get(0);
+    }
+
+    public List<String> translate(List<String> texts, Language from, Language to) throws Exception {
+        TranslateRequestParams requestParams = TranslateRequestParams.builder()
+                .apiVersion(apiVersion)
+                .apiKey(apiKey)
+                .texts(texts)
+                .from(from)
+                .to(to)
+                .build();
+
+        HttpPost httpPost = requestParams.buildHttpPost();
+        CloseableHttpResponse response = httpClient.execute(httpPost);
+
+        validateResponse(response);
 
         JSONObject jsonObject = new JSONObject(EntityUtils.toString(response.getEntity()));
         JSONArray textArray = jsonObject.getJSONArray("text");

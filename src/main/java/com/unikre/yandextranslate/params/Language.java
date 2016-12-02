@@ -48,7 +48,7 @@ public enum Language {
     KOREAN("ko"),
     KYRGYZ("ky"),
     LATIN("la"),
-    LATVIAN("ly"),
+    LATVIAN("lv"),
     LITHUANIAN("lt"),
     MACEDONIAN("mk"),
     MALAGASY("mg"),
@@ -102,5 +102,14 @@ public enum Language {
     @Override
     public String toString() {
         return code;
+    }
+
+    public static Language byCode(String code) {
+        for (Language language : values()) {
+            if (language.code.equals(code)) {
+                return language;
+            }
+        }
+        throw new IllegalArgumentException("Unknown language code : " + code);
     }
 }
