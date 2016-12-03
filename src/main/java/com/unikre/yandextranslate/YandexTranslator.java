@@ -6,6 +6,7 @@ import com.unikre.yandextranslate.http.ResponseCode;
 import com.unikre.yandextranslate.http.TranslateRequestParams;
 import com.unikre.yandextranslate.params.ApiVersion;
 import com.unikre.yandextranslate.params.Language;
+import com.unikre.yandextranslate.params.RequestType;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.http.HttpEntity;
@@ -25,14 +26,24 @@ public class YandexTranslator {
     @Getter
     @Setter
     private String apiKey;
+
     @Getter
     @Setter
     private ApiVersion apiVersion;
+
+    @Getter
+    @Setter
+    private RequestType requestType;
+
     private CloseableHttpClient httpClient;
 
     public YandexTranslator(String apiKey) {
+
+        // Default settings
         setApiKey(apiKey);
         setApiVersion(ApiVersion.LATEST);
+        setRequestType(RequestType.JSON);
+
         httpClient = HttpClients.createDefault();
     }
 
@@ -59,6 +70,7 @@ public class YandexTranslator {
     public List<Language> getSupportedLanguages(Language ui) throws Exception {
         GetLangsRequestParams requestParams = GetLangsRequestParams.builder()
                 .apiVersion(apiVersion)
+                .requestType(requestType)
                 .apiKey(apiKey)
                 .ui(ui)
                 .build();
@@ -90,6 +102,7 @@ public class YandexTranslator {
     public List<String> translate(List<String> texts, Language from, Language to) throws Exception {
         TranslateRequestParams requestParams = TranslateRequestParams.builder()
                 .apiVersion(apiVersion)
+                .requestType(requestType)
                 .apiKey(apiKey)
                 .texts(texts)
                 .from(from)
@@ -130,6 +143,7 @@ public class YandexTranslator {
 
         DetectRequestParams requestParams = DetectRequestParams.builder()
                 .apiVersion(apiVersion)
+                .requestType(requestType)
                 .apiKey(apiKey)
                 .text(text)
                 .hints(hintList)

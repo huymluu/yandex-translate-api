@@ -14,10 +14,10 @@ import java.util.List;
 
 public class GetLangsRequestParams extends RequestParams {
 
-    private static final String PARAM_UI = "ui";
+    private static final String PARAM_UI = "ui"; // Optional
     private static final String PARAM_CALLBACK = "callback"; // Optional
 
-    private Language ui;
+    private Language ui; // optional
 
     @Builder
     public GetLangsRequestParams(RequestType requestType,
@@ -38,7 +38,9 @@ public class GetLangsRequestParams extends RequestParams {
         // API key
         params.add(new BasicNameValuePair(PARAM_KEY, getApiKey()));
 
-        params.add(new BasicNameValuePair(PARAM_UI, ui.toString()));
+        if (ui != null && !ui.equals(Language.AUTODETECT)) {
+            params.add(new BasicNameValuePair(PARAM_UI, ui.toString()));
+        }
 
         httpPost.setEntity(new UrlEncodedFormEntity(params));
 

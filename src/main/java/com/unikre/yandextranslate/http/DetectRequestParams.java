@@ -20,7 +20,7 @@ public class DetectRequestParams extends RequestParams {
     private static final String PARAM_CALLBACK = "callback"; // Optional
 
     private String text;
-    private List<Language> hints;
+    private List<Language> hints; // optional
 
     @Builder
     public DetectRequestParams(RequestType requestType,
@@ -48,10 +48,13 @@ public class DetectRequestParams extends RequestParams {
         if (hints != null && hints.size() > 0) {
             String hintParam = "";
             for (Language language : hints) {
-                hintParam += "," + language.toString();
+                if (!Language.AUTODETECT.equals(language)) {
+                    hintParam += "," + language.toString();
+                }
             }
-
-            params.add(new BasicNameValuePair(PARAM_HINT, hintParam.substring(1)));
+            if (hintParam.length() > 0) {
+                params.add(new BasicNameValuePair(PARAM_HINT, hintParam.substring(1)));
+            }
         }
 
         httpPost.setEntity(new UrlEncodedFormEntity(params));
