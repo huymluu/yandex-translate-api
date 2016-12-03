@@ -44,5 +44,4 @@ Language detectedLanguage = yandexTranslator.detectLanguage("Hallo", Language.EN
 
 # TODO
 - Support XML
-- Detect lang (https://tech.yandex.com/translate/doc/dg/reference/detect-docpage/)
 - Support `options` in API request (https://tech.yandex.com/translate/doc/dg/reference/translate-docpage/)
