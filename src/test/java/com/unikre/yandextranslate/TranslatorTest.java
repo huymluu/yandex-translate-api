@@ -61,4 +61,17 @@ public class TranslatorTest {
         languages = yandexTranslator.getSupportedLanguages();
         Assert.assertTrue(languages.size() > 0);
     }
+
+    @Test
+    public void testDetectLanguage() throws Exception {
+        YandexTranslator yandexTranslator = new YandexTranslator(SAMPLE_KEY);
+
+        Assert.assertTrue(yandexTranslator.detectLanguage("Hello") == Language.ENGLISH);
+
+        Assert.assertTrue(yandexTranslator.detectLanguage("Guten") == Language.GERMAN);
+
+        Assert.assertTrue(yandexTranslator.detectLanguage("Hallo", Language.GERMAN) == Language.GERMAN);
+
+        Assert.assertTrue(yandexTranslator.detectLanguage("Hallo", Language.GERMAN, Language.ENGLISH) == Language.GERMAN);
+    }
 }

@@ -1,9 +1,11 @@
 # Usage
 
+## Register API key
+Get free API key at https://tech.yandex.com/translate/
+
 ## Initialization
 
 ```java
-// Get free API key at https://tech.yandex.com/translate/
 YandexTranslator yandexTranslator = new YandexTranslator("YOUR YANDEX API KEY");
 ```
 
@@ -25,6 +27,19 @@ List<String> input = new ArrayList<String>();
 input.add("Hello");
 input.add("World");
 List<String> translated = yandexTranslator.translate(input, Language.GERMAN);
+```
+
+## Detect language
+```java
+// Auto detect best language
+Language detectedLanguage = yandexTranslator.detectLanguage("Hello world");
+
+// Detect best language with hint
+Language detectedLanguage = yandexTranslator.detectLanguage("Hallo", Language.GERMAN);
+
+// Detect best language with multiple hint
+Language detectedLanguage = yandexTranslator.detectLanguage("Hallo", Language.ENGLISH, Language.GERMAN);
+
 ```
 
 # TODO

@@ -1,5 +1,6 @@
 package com.unikre.yandextranslate;
 
+import com.unikre.yandextranslate.http.DetectRequestParams;
 import com.unikre.yandextranslate.http.GetLangsRequestParams;
 import com.unikre.yandextranslate.http.ResponseCode;
 import com.unikre.yandextranslate.http.TranslateRequestParams;
@@ -117,6 +118,36 @@ public class YandexTranslator {
 
     public List<String> translate(List<String> texts, Language to) throws Exception {
         return translate(texts, Language.AUTODETECT, to);
+    }
+
+    public Language detectLanguage(String text, Language... hints) throws Exception {
+        List<Language> hintList = new ArrayList<>();
+        for (Language hint : hints) {
+            if (hint != null) {
+                hintList.add(hint);
+            }
+        }
+
+        DetectRequestParams requestParams = DetectRequestParams.builder()
+                .apiVersion(apiVersion)
+                .apiKey(apiKey)
+                .text(text)
+                .hints(hintList)
+                .build();
+
+        HttpPost httpPost = requestParams.buildHttpPost();
+        CloseableHttpResponse response = httpClient.execute(httpPost);
+
+        validateResponse(response);
+
+        JSONObject jsonObject = new JSONObject(EntityUtils.toString(response.getEntity()));
+        String langCode = jsonObject.getString("lang");
+
+        return Language.byCode(langCode);
+    }
+
+    public Language detectLanguage(String text) throws Exception {
+        return detectLanguage(text, (Language) null);
     }
 
 }
