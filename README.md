@@ -1,4 +1,4 @@
-# Usage
+# Yandex Translate API usage
 
 ## Register API key
 Get free API key at https://tech.yandex.com/translate/
@@ -39,9 +39,32 @@ Language detectedLanguage = yandexTranslator.detectLanguage("Hallo", Language.GE
 
 // Detect best language with multiple hint
 Language detectedLanguage = yandexTranslator.detectLanguage("Hallo", Language.ENGLISH, Language.GERMAN);
+```
 
+# Yandex Dictionary API usage
+
+## Register API key
+Get free API key at https://tech.yandex.com/dictionary/
+
+## Initialization
+```java
+YandexDictionary yandexDictionary = new YandexDictionary("YOUR YANDEX API KEY");
+```
+
+## Get supported lookup directions
+```java
+Map<Language, List<Language>> directions = yandexDictionary.getSupportedTranslateDirections();
+```
+
+## Lookup
+```java
+// Simple lookup
+List<Definition> definitions = yandexDictionary.lookup("time", Language.ENGLISH, Language.GERMAN);
+
+// Lookup with flags (not sure what it means, read https://tech.yandex.com/dictionary/doc/dg/reference/lookup-docpage/)
+List<Definition> definitions = yandexDictionary.lookup("time", Language.ENGLISH, Language.GERMAN, LookupFlag.FAMILY, LookupFlag.MORPHO, LookupFlag.POS_FILTER);
 ```
 
 # TODO
 - Support XML (no need, just JSON is enough)
-- Support `options` in API request (https://tech.yandex.com/translate/doc/dg/reference/translate-docpage/)
+- Support more request params: `options`, `ui`

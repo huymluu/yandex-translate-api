@@ -1,6 +1,8 @@
 package com.unikre.yandex;
 
+import com.unikre.yandex.definition.Definition;
 import com.unikre.yandex.params.Language;
+import com.unikre.yandex.params.LookupFlag;
 import com.unikre.yandex.params.RequestInterface;
 import org.junit.Assert;
 import org.junit.Before;
@@ -36,4 +38,21 @@ public class DictionaryTest {
         }
     }
 
+    @Test
+    public void testLookup() throws Exception {
+        List<Definition> definitions = yandexDictionary.lookup("time", Language.ENGLISH, Language.GERMAN);
+        Assert.assertTrue(definitions.size() == 1);
+
+        definitions = yandexDictionary.lookup("time", Language.ENGLISH, Language.ENGLISH);
+        Assert.assertTrue(definitions.size() > 0);
+
+        definitions = yandexDictionary.lookup("time", Language.ENGLISH, Language.RUSSIAN);
+        Assert.assertTrue(definitions.size() == 3);
+    }
+
+    @Test
+    public void testLookupWithFlags() throws Exception {
+        List<Definition> definitions = yandexDictionary.lookup("time", Language.ENGLISH, Language.GERMAN, LookupFlag.FAMILY, LookupFlag.MORPHO, LookupFlag.POS_FILTER);
+        Assert.assertTrue(definitions.size() == 1);
+    }
 }
