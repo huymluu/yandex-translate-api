@@ -1,4 +1,4 @@
-package com.unikre.yandextranslate.params;
+package com.unikre.yandex.params;
 
 public enum Format {
     PLAIN("plain"),

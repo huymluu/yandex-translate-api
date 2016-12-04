@@ -1,12 +1,12 @@
-package com.unikre.yandextranslate;
+package com.unikre.yandex;
 
-import com.unikre.yandextranslate.http.DetectRequestParams;
-import com.unikre.yandextranslate.http.GetLangsRequestParams;
-import com.unikre.yandextranslate.http.ResponseCode;
-import com.unikre.yandextranslate.http.TranslateRequestParams;
-import com.unikre.yandextranslate.params.ApiVersion;
-import com.unikre.yandextranslate.params.Language;
-import com.unikre.yandextranslate.params.RequestType;
+import com.unikre.yandex.http.DetectRequestParams;
+import com.unikre.yandex.http.GetLangsRequestParams;
+import com.unikre.yandex.http.ResponseCode;
+import com.unikre.yandex.http.TranslateRequestParams;
+import com.unikre.yandex.params.ApiVersion;
+import com.unikre.yandex.params.Language;
+import com.unikre.yandex.params.RequestInterface;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.http.HttpEntity;
@@ -33,7 +33,7 @@ public class YandexTranslator {
 
     @Getter
     @Setter
-    private RequestType requestType;
+    private RequestInterface requestInterface;
 
     private CloseableHttpClient httpClient;
 
@@ -42,7 +42,7 @@ public class YandexTranslator {
         // Default settings
         setApiKey(apiKey);
         setApiVersion(ApiVersion.LATEST);
-        setRequestType(RequestType.JSON);
+        setRequestInterface(RequestInterface.JSON);
 
         httpClient = HttpClients.createDefault();
     }
@@ -70,7 +70,7 @@ public class YandexTranslator {
     public List<Language> getSupportedLanguages(Language ui) throws Exception {
         GetLangsRequestParams requestParams = GetLangsRequestParams.builder()
                 .apiVersion(apiVersion)
-                .requestType(requestType)
+                .requestInterface(requestInterface)
                 .apiKey(apiKey)
                 .ui(ui)
                 .build();
@@ -102,7 +102,7 @@ public class YandexTranslator {
     public List<String> translate(List<String> texts, Language from, Language to) throws Exception {
         TranslateRequestParams requestParams = TranslateRequestParams.builder()
                 .apiVersion(apiVersion)
-                .requestType(requestType)
+                .requestInterface(requestInterface)
                 .apiKey(apiKey)
                 .texts(texts)
                 .from(from)
@@ -143,7 +143,7 @@ public class YandexTranslator {
 
         DetectRequestParams requestParams = DetectRequestParams.builder()
                 .apiVersion(apiVersion)
-                .requestType(requestType)
+                .requestType(requestInterface)
                 .apiKey(apiKey)
                 .text(text)
                 .hints(hintList)

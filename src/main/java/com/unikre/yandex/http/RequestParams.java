@@ -1,7 +1,7 @@
-package com.unikre.yandextranslate.http;
+package com.unikre.yandex.http;
 
-import com.unikre.yandextranslate.params.ApiVersion;
-import com.unikre.yandextranslate.params.RequestType;
+import com.unikre.yandex.params.ApiVersion;
+import com.unikre.yandex.params.RequestInterface;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NonNull;
@@ -15,7 +15,7 @@ abstract class RequestParams {
     protected static final String PARAM_KEY = "key";
 
     @NonNull
-    private RequestType requestType;
+    private RequestInterface requestType;
 
     @NonNull
     private ApiVersion apiVersion;

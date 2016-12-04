@@ -1,4 +1,4 @@
-package com.unikre.yandextranslate.http;
+package com.unikre.yandex.http;
 
 public enum ResponseCode {
     OK(200, "Operation completed successfully"),

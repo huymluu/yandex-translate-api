@@ -1,8 +1,9 @@
-package com.unikre.yandextranslate.http;
+package com.unikre.yandex.http;
 
-import com.unikre.yandextranslate.params.ApiVersion;
-import com.unikre.yandextranslate.params.Language;
-import com.unikre.yandextranslate.params.RequestType;
+import com.unikre.yandex.params.ApiVersion;
+import com.unikre.yandex.params.Language;
+import com.unikre.yandex.params.RequestInterface;
+import com.unikre.yandex.params.YandexService;
 import lombok.Builder;
 import lombok.Singular;
 import org.apache.http.NameValuePair;
@@ -23,7 +24,7 @@ public class DetectRequestParams extends RequestParams {
     private List<Language> hints; // optional
 
     @Builder
-    public DetectRequestParams(RequestType requestType,
+    public DetectRequestParams(RequestInterface requestType,
                                ApiVersion apiVersion,
                                String encoding,
                                String apiKey,
@@ -69,7 +70,7 @@ public class DetectRequestParams extends RequestParams {
             throw new IllegalArgumentException("Missing mandatory params");
         }
 
-        return getApiVersion().getUrl() + "/" + getRequestType() + "/detect?";
+        return YandexService.buildUrl(YandexService.TRANSLATE, getApiVersion(), getRequestType()) + "/detect?";
     }
 
 }

@@ -1,7 +1,7 @@
-package com.unikre.yandextranslate;
+package com.unikre.yandex;
 
-import com.unikre.yandextranslate.params.Language;
-import com.unikre.yandextranslate.params.RequestType;
+import com.unikre.yandex.params.Language;
+import com.unikre.yandex.params.RequestInterface;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -16,7 +16,7 @@ public class TranslatorTest {
 
     @Before
     public void init() {
-        yandexTranslator.setRequestType(RequestType.JSON);
+        yandexTranslator.setRequestInterface(RequestInterface.JSON);
     }
 
     @Test

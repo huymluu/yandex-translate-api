@@ -1,9 +1,10 @@
-package com.unikre.yandextranslate.http;
+package com.unikre.yandex.http;
 
-import com.unikre.yandextranslate.params.ApiVersion;
-import com.unikre.yandextranslate.params.Format;
-import com.unikre.yandextranslate.params.Language;
-import com.unikre.yandextranslate.params.RequestType;
+import com.unikre.yandex.params.ApiVersion;
+import com.unikre.yandex.params.Format;
+import com.unikre.yandex.params.Language;
+import com.unikre.yandex.params.RequestInterface;
+import com.unikre.yandex.params.YandexService;
 import lombok.Builder;
 import lombok.Singular;
 import org.apache.http.NameValuePair;
@@ -28,7 +29,7 @@ public class TranslateRequestParams extends RequestParams {
     private Format format; // Optional
 
     @Builder
-    public TranslateRequestParams(RequestType requestType,
+    public TranslateRequestParams(RequestInterface requestInterface,
                                   ApiVersion apiVersion,
                                   String encoding,
                                   String apiKey,
@@ -36,7 +37,7 @@ public class TranslateRequestParams extends RequestParams {
                                   Language from,
                                   Language to,
                                   Format format) {
-        super(requestType, apiVersion, encoding, apiKey);
+        super(requestInterface, apiVersion, encoding, apiKey);
         this.texts = texts;
         this.from = from;
         this.to = to;
@@ -82,7 +83,7 @@ public class TranslateRequestParams extends RequestParams {
             throw new IllegalArgumentException("Missing mandatory params");
         }
 
-        return getApiVersion().getUrl() + "/" + getRequestType() + "/translate?";
+        return YandexService.buildUrl(YandexService.TRANSLATE, getApiVersion(), getRequestType()) + "/translate?";
     }
 
 }
