@@ -1,8 +1,11 @@
 package com.unikre.yandex.params;
 
 public enum ApiVersion {
-    VERSION_1_5("v1.5"),
-    LATEST("v1.5");
+    TRANSLATE_1_5("v1.5"),
+    TRANSLATE_LATEST("v1.5"),
+
+    DICTIONARY_1("v1"),
+    DICTIONARY_LATEST("v1");
 
     private final String version;
 

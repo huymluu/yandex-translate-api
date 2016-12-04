@@ -2,18 +2,11 @@ package com.unikre.yandex;
 
 import com.unikre.yandex.http.DetectRequestParams;
 import com.unikre.yandex.http.GetLangsRequestParams;
-import com.unikre.yandex.http.ResponseCode;
 import com.unikre.yandex.http.TranslateRequestParams;
 import com.unikre.yandex.params.ApiVersion;
 import com.unikre.yandex.params.Language;
-import com.unikre.yandex.params.RequestInterface;
-import lombok.Getter;
-import lombok.Setter;
-import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -21,46 +14,12 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.List;
 
-public class YandexTranslator {
-
-    @Getter
-    @Setter
-    private String apiKey;
-
-    @Getter
-    @Setter
-    private ApiVersion apiVersion;
-
-    @Getter
-    @Setter
-    private RequestInterface requestInterface;
-
-    private CloseableHttpClient httpClient;
+public class YandexTranslator extends YandexExecutor {
 
     public YandexTranslator(String apiKey) {
+        super(apiKey);
 
-        // Default settings
-        setApiKey(apiKey);
-        setApiVersion(ApiVersion.LATEST);
-        setRequestInterface(RequestInterface.JSON);
-
-        httpClient = HttpClients.createDefault();
-    }
-
-    private void validateResponse(CloseableHttpResponse response) throws Exception {
-        // Response - status code
-        ResponseCode responseCode = ResponseCode.byCode(response.getStatusLine().getStatusCode());
-        if (responseCode == null) {
-            throw new Exception("API call error: " + response.getStatusLine().getStatusCode() + " - " + response.getStatusLine().getReasonPhrase());
-        } else if (responseCode.compareTo(ResponseCode.OK) != 0) {
-            throw new Exception("API call error: " + responseCode.code + " - " + responseCode.description);
-        }
-
-        // Response - body
-        HttpEntity httpEntity = response.getEntity();
-        if (httpEntity == null) {
-            throw new Exception("API call error: Empty response body");
-        }
+        setApiVersion(ApiVersion.TRANSLATE_LATEST);
     }
 
     public List<Language> getSupportedLanguages() throws Exception {
