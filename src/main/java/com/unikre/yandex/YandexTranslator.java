@@ -1,15 +1,17 @@
 package com.unikre.yandex;
 
-import com.unikre.yandex.http.DetectRequestParams;
-import com.unikre.yandex.http.GetLangsRequestParams;
-import com.unikre.yandex.http.TranslateRequestParams;
+import com.unikre.yandex.http.YandexExecutor;
+import com.unikre.yandex.http.YandexService;
 import com.unikre.yandex.params.ApiVersion;
 import com.unikre.yandex.params.Language;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.util.EntityUtils;
+import com.unikre.yandex.params.RequestInterface;
+import okhttp3.ResponseBody;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,28 +20,19 @@ public class YandexTranslator extends YandexExecutor {
 
     public YandexTranslator(String apiKey) {
         super(apiKey);
-
         setApiVersion(ApiVersion.TRANSLATE_LATEST);
-    }
+        setRequestInterface(RequestInterface.TRANSLATE_JSON);
 
-    public List<Language> getSupportedLanguages() throws Exception {
-        return getSupportedLanguages(Language.ENGLISH);
-    }
-
-    public List<Language> getSupportedLanguages(Language ui) throws Exception {
-        GetLangsRequestParams requestParams = GetLangsRequestParams.builder()
-                .apiVersion(apiVersion)
-                .requestInterface(requestInterface)
-                .apiKey(apiKey)
-                .ui(ui)
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl("https://translate.yandex.net")
                 .build();
+        yandexService = retrofit.create(YandexService.class);
+    }
 
-        HttpPost httpPost = requestParams.buildHttpPost();
-        CloseableHttpResponse response = httpClient.execute(httpPost);
-
+    private List<Language> parseSupportedLanguages(Response<ResponseBody> response) throws Exception {
         validateResponse(response);
 
-        JSONObject jsonObject = new JSONObject(EntityUtils.toString(response.getEntity()));
+        JSONObject jsonObject = new JSONObject(response.body().string());
         JSONObject jsonLangsObject = jsonObject.getJSONObject("langs");
 
         List<Language> ret = new ArrayList<>();
@@ -49,78 +42,151 @@ public class YandexTranslator extends YandexExecutor {
         return ret;
     }
 
-    public String translate(String text, Language from, Language to) throws Exception {
-
-        List<String> input = new ArrayList<>();
-        input.add(text);
-        List<String> result = translate(input, from, to);
-
-        return result.get(0);
+    public List<Language> getSupportedLanguages() throws Exception {
+        Call<ResponseBody> call = yandexService.getSupportedLanguages(getApiVersion(),
+                getRequestInterface(),
+                getApiKey(),
+                Language.ENGLISH);
+        return parseSupportedLanguages(call.execute());
     }
 
-    public List<String> translate(List<String> texts, Language from, Language to) throws Exception {
-        TranslateRequestParams requestParams = TranslateRequestParams.builder()
-                .apiVersion(apiVersion)
-                .requestInterface(requestInterface)
-                .apiKey(apiKey)
-                .texts(texts)
-                .from(from)
-                .to(to)
-                .build();
+    public void getSupportedLanguages(final YandexCallback<List<Language>> callback) throws Exception {
+        Call<ResponseBody> call = yandexService.getSupportedLanguages(getApiVersion(),
+                getRequestInterface(),
+                getApiKey(),
+                Language.ENGLISH);
 
-        HttpPost httpPost = requestParams.buildHttpPost();
-        CloseableHttpResponse response = httpClient.execute(httpPost);
-
-        validateResponse(response);
-
-        JSONObject jsonObject = new JSONObject(EntityUtils.toString(response.getEntity()));
-        JSONArray textArray = jsonObject.getJSONArray("text");
-
-        List<String> list = new ArrayList<String>();
-        for (int i = 0; i < textArray.length(); i++) {
-            list.add(textArray.getString(i));
-        }
-
-        return list;
-    }
-
-    public String translate(String text, Language to) throws Exception {
-        return translate(text, Language.AUTODETECT, to);
-    }
-
-    public List<String> translate(List<String> texts, Language to) throws Exception {
-        return translate(texts, Language.AUTODETECT, to);
-    }
-
-    public Language detectLanguage(String text, Language... hints) throws Exception {
-        List<Language> hintList = new ArrayList<>();
-        for (Language hint : hints) {
-            if (hint != null) {
-                hintList.add(hint);
+        Callback<ResponseBody> genericCallback = new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                try {
+                    callback.onResponse(parseSupportedLanguages(response));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    callback.onFailure(e);
+                }
             }
-        }
 
-        DetectRequestParams requestParams = DetectRequestParams.builder()
-                .apiVersion(apiVersion)
-                .requestType(requestInterface)
-                .apiKey(apiKey)
-                .text(text)
-                .hints(hintList)
-                .build();
+            @Override
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+                callback.onFailure(t);
+            }
+        };
 
-        HttpPost httpPost = requestParams.buildHttpPost();
-        CloseableHttpResponse response = httpClient.execute(httpPost);
+        call.enqueue(genericCallback);
+    }
 
+    private Language parseDetectLanguage(Response<ResponseBody> response) throws Exception {
         validateResponse(response);
 
-        JSONObject jsonObject = new JSONObject(EntityUtils.toString(response.getEntity()));
+        JSONObject jsonObject = new JSONObject(response.body().string());
         String langCode = jsonObject.getString("lang");
 
         return Language.byCode(langCode);
     }
 
-    public Language detectLanguage(String text) throws Exception {
-        return detectLanguage(text, (Language) null);
+    public Language detectLanguage(String text, Language... hints) throws Exception {
+        String hintList = "";
+        for (Language hint : hints) {
+            if (hint != null) {
+                hintList += "," + hint;
+            }
+        }
+        if (hintList.length() > 1) hintList = hintList.substring(1);
+
+        Call<ResponseBody> call = yandexService.detectLanguage(getApiVersion(),
+                getRequestInterface(),
+                getApiKey(),
+                text,
+                hintList);
+
+        return parseDetectLanguage(call.execute());
     }
+
+    public void detectLanguage(String text, final YandexCallback<Language> callback, Language... hints) throws Exception {
+        String hintList = "";
+        for (Language hint : hints) {
+            if (hint != null) {
+                hintList += "," + hint;
+            }
+        }
+        if (hintList.length() > 1) hintList = hintList.substring(1);
+
+        Call<ResponseBody> call = yandexService.detectLanguage(getApiVersion(),
+                getRequestInterface(),
+                getApiKey(),
+                text,
+                hintList);
+
+        Callback<ResponseBody> genericCallback = new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                try {
+                    callback.onResponse(parseDetectLanguage(response));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    callback.onFailure(e);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+                callback.onFailure(t);
+            }
+        };
+
+        call.enqueue(genericCallback);
+    }
+
+    private String parseTranslate(Response<ResponseBody> response) throws Exception {
+        validateResponse(response);
+
+        JSONObject jsonObject = new JSONObject(response.body().string());
+        JSONArray textArray = jsonObject.getJSONArray("text");
+
+        return textArray.get(0).toString();
+    }
+
+    public void translate(String text, Language from, Language to, final YandexCallback<String> callback) throws Exception {
+        Call<ResponseBody> call = yandexService.translate(getApiVersion(),
+                getRequestInterface(),
+                getApiKey(),
+                text,
+                from == null ? to.toString() : from + "-" + to);
+
+        Callback<ResponseBody> genericCallback = new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                try {
+                    callback.onResponse(parseTranslate(response));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    callback.onFailure(e);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+                callback.onFailure(t);
+            }
+        };
+
+        call.enqueue(genericCallback);
+    }
+
+    public String translate(String text, Language from, Language to) throws Exception {
+        Call<ResponseBody> call = yandexService.translate(getApiVersion(),
+                getRequestInterface(),
+                getApiKey(),
+                text,
+                from == null ? to.toString() : from + "-" + to);
+
+        return parseTranslate(call.execute());
+    }
+
+    public String translate(String text, Language to) throws Exception {
+        return translate(text, null, to);
+    }
+
 
 }

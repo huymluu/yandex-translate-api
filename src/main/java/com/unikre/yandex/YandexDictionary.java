@@ -5,16 +5,19 @@ import com.unikre.yandex.definition.Example;
 import com.unikre.yandex.definition.Mean;
 import com.unikre.yandex.definition.Synonym;
 import com.unikre.yandex.definition.Translation;
-import com.unikre.yandex.http.GetSupportedTranslateDirectionsRequestParams;
-import com.unikre.yandex.http.LookupRequestParams;
+import com.unikre.yandex.http.YandexExecutor;
+import com.unikre.yandex.http.YandexService;
 import com.unikre.yandex.params.ApiVersion;
 import com.unikre.yandex.params.Language;
 import com.unikre.yandex.params.LookupFlag;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.util.EntityUtils;
+import com.unikre.yandex.params.RequestInterface;
+import okhttp3.ResponseBody;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -25,23 +28,19 @@ public class YandexDictionary extends YandexExecutor {
 
     public YandexDictionary(String apiKey) {
         super(apiKey);
-
         setApiVersion(ApiVersion.DICTIONARY_LATEST);
+        setRequestInterface(RequestInterface.DICTIONARY_JSON);
+
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl("https://dictionary.yandex.net")
+                .build();
+        yandexService = retrofit.create(YandexService.class);
     }
 
-    public Map<Language, List<Language>> getSupportedTranslateDirections() throws Exception {
-        GetSupportedTranslateDirectionsRequestParams requestParams = GetSupportedTranslateDirectionsRequestParams.builder()
-                .apiVersion(apiVersion)
-                .requestInterface(requestInterface)
-                .apiKey(apiKey)
-                .build();
-
-        HttpPost httpPost = requestParams.buildHttpPost();
-        CloseableHttpResponse response = httpClient.execute(httpPost);
-
+    private Map<Language, List<Language>> parseSupportedTranslateDirections(Response<ResponseBody> response) throws Exception {
         validateResponse(response);
 
-        JSONArray jsonArray = new JSONArray(EntityUtils.toString(response.getEntity()));
+        JSONArray jsonArray = new JSONArray(response.body().string());
 
         Map<Language, List<Language>> map = new HashMap<>();
 
@@ -62,39 +61,103 @@ public class YandexDictionary extends YandexExecutor {
         return map;
     }
 
-    public List<Definition> lookup(String text, Language from, Language to, LookupFlag... flags) throws Exception {
-        List<LookupFlag> flagList = new ArrayList<>();
-        for (LookupFlag flag : flags) {
-            if (flag != null) {
-                flagList.add(flag);
+    public Map<Language, List<Language>> getSupportedTranslateDirections() throws Exception {
+        Call<ResponseBody> call = yandexService.getSupportedTranslateDirections(getApiVersion(),
+                getRequestInterface(),
+                getApiKey());
+
+        return parseSupportedTranslateDirections(call.execute());
+    }
+
+    public void getSupportedTranslateDirections(final YandexCallback<Map<Language, List<Language>>> callback) throws Exception {
+        Call<ResponseBody> call = yandexService.getSupportedTranslateDirections(getApiVersion(),
+                getRequestInterface(),
+                getApiKey());
+
+        Callback<ResponseBody> genericCallback = new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                try {
+                    Map<Language, List<Language>> result = parseSupportedTranslateDirections(response);
+                    callback.onResponse(result);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    callback.onFailure(e);
+                }
             }
-        }
 
-        LookupRequestParams requestParams = LookupRequestParams.builder()
-                .apiVersion(apiVersion)
-                .requestInterface(requestInterface)
-                .apiKey(apiKey)
-                .text(text)
-                .from(from)
-                .to(to)
-                .flags(flagList)
-                .build();
+            @Override
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+                callback.onFailure(t);
+            }
+        };
 
-        HttpPost httpPost = requestParams.buildHttpPost();
-        CloseableHttpResponse response = httpClient.execute(httpPost);
+        call.enqueue(genericCallback);
+    }
 
+    private List<Definition> parseLookup(Response<ResponseBody> response) throws Exception {
         validateResponse(response);
 
-        JSONObject jsonObject = new JSONObject(EntityUtils.toString(response.getEntity()));
+        JSONObject jsonObject = new JSONObject(response.body().string());
         JSONArray defsArray = jsonObject.getJSONArray("def");
 
         return parseDefinitions(defsArray);
+    }
+
+    public List<Definition> lookup(String text, Language from, Language to, LookupFlag... flags) throws Exception {
+        long flagsParam = 0;
+        for (LookupFlag flag : flags) {
+            if (flag != null) {
+                flagsParam |= flag.getBitmask();
+            }
+        }
+
+        Call<ResponseBody> call = yandexService.lookup(getApiVersion(),
+                getRequestInterface(),
+                getApiKey(),
+                from == null ? to.toString() : from + "-" + to,
+                text,
+                flagsParam);
+
+        return parseLookup(call.execute());
     }
 
     public List<Definition> lookup(String text, Language from, Language to) throws Exception {
         return lookup(text, from, to, (LookupFlag) null);
     }
 
+    public void lookup(String text, Language from, Language to, final YandexCallback<List<Definition>> callback) {
+        Call<ResponseBody> call = yandexService.lookup(getApiVersion(),
+                getRequestInterface(),
+                getApiKey(),
+                from == null ? to.toString() : from + "-" + to,
+                text,
+                null);
+
+        Callback<ResponseBody> genericCallback = new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                try {
+                    List<Definition> result = parseLookup(response);
+                    callback.onResponse(result);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    callback.onFailure(e);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+                callback.onFailure(t);
+            }
+        };
+
+        call.enqueue(genericCallback);
+    }
+
+    /**********
+     *        *
+     **********/
     private List<Definition> parseDefinitions(JSONArray defArray) {
         List<Definition> definitions = new ArrayList<>();
         for (int i = 0; i < defArray.length(); i++) {
