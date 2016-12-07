@@ -95,4 +95,11 @@ public class DictionaryTest {
         });
         lock.await(5000, TimeUnit.MILLISECONDS);
     }
+
+    @Test
+    public void testLookupHumanize() throws Exception {
+        TranslatedWord translatedWord = yandexDictionary.lookup("time", Language.ENGLISH, Language.RUSSIAN);
+        Assert.assertTrue(translatedWord.getDefinitions().size() == 3);
+        System.out.println(YandexUtil.humanize(translatedWord));
+    }
 }
