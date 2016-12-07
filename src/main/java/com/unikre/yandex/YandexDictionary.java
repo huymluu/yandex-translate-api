@@ -66,7 +66,7 @@ public class YandexDictionary extends YandexExecutor {
         return parseSupportedTranslateDirections(call.execute());
     }
 
-    public void getSupportedTranslateDirections(final YandexCallback<Map<Language, List<Language>>> callback) throws Exception {
+    public void getSupportedTranslateDirections(final YandexCallback<Map<Language, List<Language>>> callback) {
         Call<ResponseBody> call = yandexService.getSupportedTranslateDirections(getApiVersion(),
                 getRequestInterface(),
                 getApiKey());
