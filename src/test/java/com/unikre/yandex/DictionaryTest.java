@@ -1,6 +1,6 @@
 package com.unikre.yandex;
 
-import com.unikre.yandex.definition.Definition;
+import com.unikre.yandex.definition.TranslatedWord;
 import com.unikre.yandex.params.Language;
 import com.unikre.yandex.params.LookupFlag;
 import org.junit.Assert;
@@ -62,29 +62,29 @@ public class DictionaryTest {
 
     @Test
     public void testLookup() throws Exception {
-        List<Definition> definitions = yandexDictionary.lookup("time", Language.ENGLISH, Language.GERMAN);
-        Assert.assertTrue(definitions.size() == 1);
+        TranslatedWord translatedWord = yandexDictionary.lookup("time", Language.ENGLISH, Language.GERMAN);
+        Assert.assertTrue(translatedWord.getDefinitions().size() == 1);
 
-        definitions = yandexDictionary.lookup("time", Language.ENGLISH, Language.ENGLISH);
-        Assert.assertTrue(definitions.size() > 0);
+        translatedWord = yandexDictionary.lookup("time", Language.ENGLISH, Language.ENGLISH);
+        Assert.assertTrue(translatedWord.getDefinitions().size() > 0);
 
-        definitions = yandexDictionary.lookup("time", Language.ENGLISH, Language.RUSSIAN);
-        Assert.assertTrue(definitions.size() == 3);
+        translatedWord = yandexDictionary.lookup("time", Language.ENGLISH, Language.RUSSIAN);
+        Assert.assertTrue(translatedWord.getDefinitions().size() == 3);
     }
 
     @Test
     public void testLookupWithFlags() throws Exception {
-        List<Definition> definitions = yandexDictionary.lookup("time", Language.ENGLISH, Language.GERMAN, LookupFlag.FAMILY, LookupFlag.MORPHO, LookupFlag.POS_FILTER);
-        Assert.assertTrue(definitions.size() == 1);
+        TranslatedWord translatedWord = yandexDictionary.lookup("time", Language.ENGLISH, Language.GERMAN, LookupFlag.FAMILY, LookupFlag.MORPHO, LookupFlag.POS_FILTER);
+        Assert.assertTrue(translatedWord.getDefinitions().size() == 1);
     }
 
     @Test
     public void testLookupAsync() throws InterruptedException {
         final CountDownLatch lock = new CountDownLatch(1);
-        yandexDictionary.lookup("book", Language.ENGLISH, Language.GERMAN, new YandexCallback<List<Definition>>() {
+        yandexDictionary.lookup("book", Language.ENGLISH, Language.GERMAN, new YandexCallback<TranslatedWord>() {
             @Override
-            public void onResponse(List<Definition> result) {
-                Assert.assertTrue(result.size() > 0);
+            public void onResponse(TranslatedWord result) {
+                Assert.assertTrue(result.getDefinitions().size() > 0);
                 lock.countDown();
             }
 
